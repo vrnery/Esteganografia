@@ -50,3 +50,11 @@
 
 1590601523 /home/vanderson/facu/trabalhos/PSB/T2/Esteganografia/codificador/lib/SOIL/stbi_DDS_aug_c.h
 
+1593706761 source:/home/vanderson/facu/trabalhos/PSB/T2/Esteganografia/codificador/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"include/SOIL.h"
+
+1590601523 /home/vanderson/facu/trabalhos/PSB/T2/Esteganografia/codificador/include/SOIL.h
+

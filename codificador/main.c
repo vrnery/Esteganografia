@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 {
     Img base, secreta;
     if(argc < 3) {
-        printf("loader [img base] [img secreta]\n");
+        printf("codificar [img base] [img secreta]\n");
         exit(1);
     }
     load(argv[1], &base);
@@ -77,8 +77,10 @@ int main(int argc, char** argv)
     codificaTamanho(&base, 2, secreta.height);
 
     // Esteganograma;
+    // Calcula a quantidade de pixels da imagem secreta
     int t_sec = secreta.width * secreta.height;
     for (int t=0; t<t_sec; t++) {
+        // Codifica cada pixel da imagem secreta
         codificaEsteganografia(&base, ((t * 4) + 4), &secreta.img[t]);
     }
 
@@ -92,8 +94,11 @@ int main(int argc, char** argv)
 
 // Validação das imagens
 int validacaoImagem(Img* base, Img* secreta) {
+    // Calcula o total de pixels limite para a imagem secreta
     long t_base = ((base->width * base->height) - 1) / 4;
+    // Calcula o total de pixels da imagem secreta
     long t_secreta = secreta->width * secreta->height;
+    // Compara se a imagem secreta cabe dentro da base
     if (t_secreta > t_base)
         return 0;
     else
@@ -102,8 +107,10 @@ int validacaoImagem(Img* base, Img* secreta) {
 
 // Validação dos pixels
 int validacaoPixel(Img* secreta) {
+    // Determina o tamanho maximo para a largura
     if (secreta->width > 4096)
         return 0;
+    // Determina o tamanho maximo para a altura
     if (secreta->height > 4096)
         return 0;
     return 1;
@@ -111,8 +118,11 @@ int validacaoPixel(Img* secreta) {
 
 // Zera 2 bitset
 void bitwise2(Img* base) {
+    // Calcula o total de pixels
     int xy = base->width * base->height;
+    // Percorre todos os pixels
     for (int z=0; z<xy; z++) {
+        // Utiliza a mascara 252 = 11111100 para escovar os bits
         base->img[z].r &= 252;
         base->img[z].g &= 252;
         base->img[z].b &= 252;
@@ -121,25 +131,47 @@ void bitwise2(Img* base) {
 
 // Codificação de largura e altura
 void codificaTamanho(Img* base, int index, int tamanho) {
+    // Subtrai 1 no tamanho, ex: 4096 - 1 = 4095 = 111111111111
     tamanho--;
+    // Cria a mascara 3072 = 110000000000, desloca 10 bits para a direita
+    // ex: 110000000000 >> 10 = 11
+    // Armazena os 2 bits do tamanho (2^12)
     base->img[index].r |= ((tamanho & 3072) >> 10);
+    // ex: 1100000000 >> 8 = 11
+    // Armazena os 2 bits do tamanho (2^10)
     base->img[index].g |= ((tamanho & 768) >> 8);
+    // ex: 11000000 >> 6 = 11
+    // Armazena os 2 bits do tamanho (2^8)
     base->img[index].b |= ((tamanho & 192) >> 6);
+    // Indexa para o proximo pixel da imagem base
     index++;
+    // ex: 110000 >> 4 = 11
+    // Armazena os 2 bits do tamanho (2^6)
     base->img[index].r |= ((tamanho & 48) >> 4);
+    // ex: 1100 >> 2 = 11
+    // Armazena os 2 bits do tamanho (2^4)
     base->img[index].g |= ((tamanho & 12) >> 2);
+    // Armazena os 2 bits do tamanho (2^2)
     base->img[index].b |= (tamanho & 3);
 }
 
 // Codificar esteganografia
 void codificaEsteganografia(Img* base, int index, RGB* pixel) {
+    // Bits a deslocar
     int bit = 6;
+    // Mascara 192 = 11000000
     int wise = 192;
+    // Percorre 4 pixels apartir do informado (index)
     for (int x=index; x<(index+4); x++) {
+        // Extrair os bits da imagem secreta usando a mascara
+        // Deslocar bits extraidos para a direita (>> bit) sobrando apenas 2 bits
+        // Escova 2 bits com o byte da imagem
         base->img[x].r |= ((pixel->r & wise) >> bit);
         base->img[x].g |= ((pixel->g & wise) >> bit);
         base->img[x].b |= ((pixel->b & wise) >> bit);
+        // Divide a mascara ṕor 2 bits (11000000 >> 2 = 110000)
         wise >>= 2;
+        // Diminui 2 bits de deslocamento (6 - 2 = 4)
         bit -= 2;
     }
 }
